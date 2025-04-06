@@ -1,50 +1,50 @@
-# Білобожницький Телеграм Бот
+# Bilobozhnytskyi Telegram Bot
 
-Телеграм бот для Білобожницької громади, який надає інформацію про:
-- Погоду
-- Прогноз погоди
-- Новини
-- Свята та визначні дати
-- Сповіщення про погоду
+Telegram bot for Bilobozhnytska community that provides information about:
+- Weather
+- Weather forecast
+- News
+- Holidays and significant dates
+- Weather notifications
 
-## Встановлення
+## Installation
 
-1. Клонуйте репозиторій
-2. Створіть віртуальне середовище:
+1. Clone the repository
+2. Create a virtual environment:
 ```bash
 python -m venv venv
-source venv/bin/activate  # для Linux/Mac
-# або
-venv\Scripts\activate  # для Windows
+source venv/bin/activate  # for Linux/Mac
+# or
+venv\Scripts\activate  # for Windows
 ```
-3. Встановіть залежності:
+3. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
-4. Створіть файл `.env` на основі `.env.example` та додайте необхідні токени
-5. Запустіть бота:
+4. Create `.env` file based on `.env.example` and add necessary tokens
+5. Run the bot:
 ```bash
 python main.py
 ```
 
-## Структура проекту
+## Project Structure
 
 ```
 bilobotyk/
-├── src/           # Вихідний код
-├── logs/          # Логи
-├── config.py      # Конфігурація
-├── database.py    # Робота з базою даних
-├── holidays.py    # Обробка свят
-├── news.py        # Обробка новин
-├── main.py        # Головний файл
+├── src/           # Source code
+├── logs/          # Logs
+├── config.py      # Configuration
+├── database.py    # Database operations
+├── holidays.py    # Holidays processing
+├── news.py        # News processing
+├── main.py        # Main file
 └── requirements.txt
 ```
 
-## Налаштування
+## Configuration
 
-Створіть файл `.env` з наступними змінними:
+Create `.env` file with the following variables:
 ```
-BOT_TOKEN=ваш_токен_бота
-WEATHER_API_KEY=ваш_ключ_api_погоди
+BOT_TOKEN=your_bot_token
+WEATHER_API_KEY=your_weather_api_key
 ``` 

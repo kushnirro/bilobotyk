@@ -17,7 +17,7 @@ from holidays import get_all_holidays
 from database import Database
 from news import NewsLinks
 
-# Налаштування логування
+# Logging settings
 log_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'logs')
 os.makedirs(log_dir, exist_ok=True)
 
@@ -31,40 +31,40 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Завантаження змінних оточення
+# Loading environment variables
 env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env')
 if not os.path.exists(env_path):
-    raise FileNotFoundError(f"Файл .env не знайдено за шляхом: {env_path}")
+    raise FileNotFoundError(f"Environment file .env not found at path: {env_path}")
 load_dotenv(env_path)
 
-# Отримання ключів API з змінних оточення
+# Getting API keys from environment variables
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 WEATHER_API_KEY = os.getenv('WEATHER_API_KEY')
 
-# Перевірка наявності необхідних токенів
+# Checking for required tokens
 if not BOT_TOKEN:
-    raise ValueError("BOT_TOKEN не знайдено в змінних оточення")
+    raise ValueError("BOT_TOKEN not found in environment variables")
 if not WEATHER_API_KEY:
-    raise ValueError("WEATHER_API_KEY не знайдено в змінних оточення")
+    raise ValueError("WEATHER_API_KEY not found in environment variables")
 
-# Створення бота, бази даних та парсера новин
+# Creating bot, database and news parser instances
 bot = telebot.TeleBot(BOT_TOKEN)
 db = Database()
 news_parser = NewsLinks()
 
-# Кеші для даних
+# Data caches
 weather_cache = {}
 forecast_cache = {}
 
-# Список свят
+# List of holidays
 holidays = get_all_holidays()
 
-# Функція для отримання погоди
+# Function to get weather
 def get_weather(lat, lon):
     cache_key = f"{lat}_{lon}"
     current_time = time.time()
     
-    # Перевірка кешу
+    # Cache check
     if cache_key in weather_cache:
         cached_data = weather_cache[cache_key]
         if current_time - cached_data['timestamp'] < WEATHER_CACHE_TIMEOUT:
@@ -92,7 +92,7 @@ def get_weather(lat, lon):
             f"💨 *Швидкість вітру:* {wind_speed} м/с"
         )
         
-        # Зберігання в кеші
+        # Storing in cache
         weather_cache[cache_key] = {
             'data': weather_info,
             'timestamp': current_time
@@ -100,20 +100,20 @@ def get_weather(lat, lon):
         
         return weather_info
     except requests.RequestException as e:
-        logger.error(f"Помилка запиту до API погоди: {e}")
-        return "❌ Не вдалося отримати дані про погоду. Спробуйте пізніше."
+        logger.error(f"Weather API request error: {e}")
+        return "❌ Failed to get weather data. Please try again later."
     except KeyError as e:
-        logger.error(f"Помилка обробки даних погоди: {e}")
-        return "❌ Помилка обробки даних погоди. Спробуйте пізніше."
+        logger.error(f"Weather data processing error: {e}")
+        return "❌ Error processing weather data. Please try again later."
     except Exception as e:
-        logger.error(f"Неочікувана помилка: {e}")
-        return "❌ Сталася неочікувана помилка. Спробуйте пізніше."
+        logger.error(f"Unexpected error: {e}")
+        return "❌ An unexpected error occurred. Please try again later."
 
-# Функція для отримання відповідного емодзі до погоди
+# Function to get appropriate weather emoji
 def get_weather_emoji(weather_main):
     return WEATHER_EMOJIS.get(weather_main, "🌈")
 
-# Перевірка свят для поточного дня
+# Check holidays for current day
 def get_today_holidays():
     today = datetime.datetime.now()
     holidays = get_all_holidays(today.year)
@@ -124,7 +124,7 @@ def get_today_holidays():
     return "📅 *Сьогодні немає державних або релігійних свят.*"
 
 def get_weather_forecast(lat, lon):
-    """Отримати прогноз погоди на 5 днів"""
+    """Get 5-day weather forecast"""
     cache_key = f"{lat}_{lon}"
     current_time = time.time()
     
@@ -166,17 +166,17 @@ def get_weather_forecast(lat, lon):
         
         return result
     except Exception as e:
-        logger.error(f"Помилка отримання прогнозу погоди: {e}")
-        return "❌ Не вдалося отримати прогноз погоди. Спробуйте пізніше."
+        logger.error(f"Error getting weather forecast: {e}")
+        return "❌ Failed to get weather forecast. Please try again later."
 
 def show_notification_settings(message):
-    """Показати налаштування сповіщень"""
+    """Show notification settings"""
     markup = types.InlineKeyboardMarkup(row_width=1)
     
-    # Отримуємо поточні налаштування
+    # Get current settings
     current_times = db.get_user_notifications(message.chat.id)
     
-    # Додаємо кнопки для стандартних часів
+    # Add buttons for default times
     for time in DEFAULT_NOTIFICATION_TIMES:
         text = f"{'✅' if time in current_times else '❌'} {time}"
         markup.add(types.InlineKeyboardButton(
@@ -198,7 +198,7 @@ def show_notification_settings(message):
     )
 
 def show_news_sources(message):
-    """Показати доступні джерела новин"""
+    """Show available news sources"""
     news = news_parser.get_news_sources()
     bot.send_message(
         message.chat.id,
@@ -207,7 +207,7 @@ def show_news_sources(message):
         disable_web_page_preview=True
     )
 
-# Оновлюємо обробник команди /start
+# Updated /start command handler
 @bot.message_handler(commands=['start'])
 def start(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
@@ -230,33 +230,28 @@ def start(message):
     
     bot.send_message(message.chat.id, welcome_message, reply_markup=markup)
 
-# Обробник команди /weather
+# Weather command handler
 @bot.message_handler(commands=['weather'])
 def weather_command(message):
     show_settlement_selection(message, "weather")
 
-# Обробник команди /forecast
+# Forecast command handler
 @bot.message_handler(commands=['forecast'])
 def forecast_command(message):
     show_settlement_selection(message, "forecast")
 
-# Обробник команди /news
+# News command handler
 @bot.message_handler(commands=['news'])
 def news_command(message):
     show_news_sources(message)
 
-# Обробник команди /holiday
+# Holiday command handler
 @bot.message_handler(commands=['holiday'])
 def holiday_command(message):
     holiday_info = get_today_holidays()
     bot.send_message(message.chat.id, holiday_info, parse_mode="Markdown")
 
-# Обробник команди /settings
-@bot.message_handler(commands=['settings'])
-def settings_command(message):
-    show_notification_settings(message)
-
-# Показати меню вибору населених пунктів
+# Show settlement selection menu
 def show_settlement_selection(message, action_type="weather"):
     markup = types.InlineKeyboardMarkup(row_width=2)
     buttons = []
@@ -275,7 +270,7 @@ def show_settlement_selection(message, action_type="weather"):
     
     bot.send_message(message.chat.id, title, reply_markup=markup)
 
-# Обробник натискання кнопок
+# Callback handler
 @bot.callback_query_handler(func=lambda call: True)
 def callback_handler(call):
     if call.data.startswith("weather_"):
@@ -287,7 +282,7 @@ def callback_handler(call):
             message_text = f"*Погода у {settlement}*\n\n{weather_info}"
             bot.send_message(call.message.chat.id, message_text, parse_mode="Markdown")
             
-            # Зберігаємо вибраний населений пункт
+            # Save selected settlement
             db.save_user_settlement(call.message.chat.id, settlement)
     
     elif call.data.startswith("forecast_"):
@@ -324,7 +319,7 @@ def callback_handler(call):
     
     bot.answer_callback_query(call.id)
 
-# Обробник текстових повідомлень
+# Text message handler
 @bot.message_handler(content_types=['text'])
 def handle_text(message):
     if message.text == '🌤️ Погода':
@@ -349,7 +344,7 @@ def handle_text(message):
             "/settings - Налаштування"
         )
 
-# Функція для надсилання сповіщень
+# Function to send notifications
 def send_weather_notifications():
     while True:
         current_time = datetime.datetime.now().strftime("%H:%M")
@@ -366,16 +361,16 @@ def send_weather_notifications():
                     bot.send_message(user["user_id"], message_text, parse_mode="Markdown")
                     db.update_last_notification(user["user_id"])
                 except Exception as e:
-                    logger.error(f"Помилка надсилання сповіщення користувачу {user['user_id']}: {e}")
+                    logger.error(f"Error sending notification to user {user['user_id']}: {e}")
         
-        # Чекаємо 1 хвилину перед наступною перевіркою
+        # Wait 1 minute before next check
         time.sleep(60)
 
-# Запуск бота
+# Bot startup
 if __name__ == "__main__":
-    # Запускаємо потік для сповіщень
+    # Start notification thread
     notification_thread = threading.Thread(target=send_weather_notifications, daemon=True)
     notification_thread.start()
     
-    print("Бот запущено!")
+    print("Bot started!")
     bot.polling(none_stop=True)

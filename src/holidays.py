@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 import calendar
 
 def calculate_easter(year):
-    """Розрахунок дати православного Великодня за алгоритмом Мелера."""
+    """Calculate the date of Orthodox Easter using Meeus's algorithm."""
     a = year % 19
     b = year % 4
     c = year % 7
@@ -17,34 +17,34 @@ def calculate_easter(year):
         day = f - 9
         month = 4
     
-    # Конвертація з юліанського в григоріанський календар
+    # Convert from Julian to Gregorian calendar
     julian_date = datetime(year, month, day)
     gregorian_date = julian_date + timedelta(days=13)
     
     return gregorian_date.strftime("%m-%d")
 
 def calculate_vyshyvanka_day(year):
-    """Розрахунок дня вишиванки (третій четвер травня)."""
+    """Calculate Vyshyvanka Day (third Thursday in May)."""
     c = calendar.monthcalendar(year, 5)
     thursdays = [week[calendar.THURSDAY] for week in c if week[calendar.THURSDAY] != 0]
     third_thursday = thursdays[2]
     return f"05-{third_thursday:02d}"
 
 def calculate_trinity_day(year):
-    """Розрахунок дня Трійці (50 днів після Великодня)."""
+    """Calculate Trinity Day (50 days after Easter)."""
     easter_date = datetime.strptime(f"{year}-{calculate_easter(year)}", "%Y-%m-%d")
     trinity_date = easter_date + timedelta(days=49)
     return trinity_date.strftime("%m-%d")
 
 def get_dynamic_holidays(year):
-    """Отримання свят з динамічними датами для конкретного року."""
+    """Get holidays with dynamic dates for a specific year."""
     return {
         calculate_easter(year): "🐣 Великдень",
         calculate_vyshyvanka_day(year): "🌺 День вишиванки",
         calculate_trinity_day(year): "🌿 Трійця"
     }
 
-# Статичні свята та визначні дати
+# Static holidays and significant dates
 STATIC_HOLIDAYS = {
     # Січень
     "01-01": "🎄 Новий рік",
@@ -102,7 +102,7 @@ STATIC_HOLIDAYS = {
 }
 
 def get_all_holidays(year=None):
-    """Отримання всіх свят з урахуванням динамічних дат."""
+    """Get all holidays including dynamic dates."""
     if year is None:
         year = datetime.now().year
         

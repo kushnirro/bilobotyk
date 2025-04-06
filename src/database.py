@@ -16,26 +16,26 @@ class Database:
         self.create_tables()
         self.backup_dir = "backups"
         
-        # Створюємо директорію для бекапів якщо її немає
+        # Create backup directory if it doesn't exist
         if not os.path.exists(self.backup_dir):
             os.makedirs(self.backup_dir)
 
     @contextmanager
     def get_connection(self):
-        """Отримати з'єднання з базою даних використовуючи контекстний менеджер"""
+        """Get database connection using context manager"""
         conn = None
         try:
             conn = sqlite3.connect(self.db_path)
             yield conn
         except sqlite3.Error as e:
-            logger.error(f"Помилка підключення до бази даних: {e}")
+            logger.error(f"Database connection error: {e}")
             raise
         finally:
             if conn:
                 conn.close()
 
     def execute_query(self, query: str, params: tuple = None, fetch_all: bool = False) -> Optional[List[tuple]]:
-        """Виконати SQL запит з обробкою помилок"""
+        """Execute SQL query with error handling"""
         with self.get_connection() as conn:
             try:
                 cursor = conn.cursor()
@@ -52,12 +52,12 @@ class Database:
                 conn.commit()
                 return result
             except sqlite3.Error as e:
-                logger.error(f"Помилка виконання запиту: {e}")
+                logger.error(f"Query execution error: {e}")
                 conn.rollback()
                 raise
 
     def create_backup(self):
-        """Створити резервну копію бази даних"""
+        """Create database backup"""
         try:
             backup_file = os.path.join(
                 self.backup_dir, 
@@ -67,33 +67,33 @@ class Database:
                 with open(backup_file, 'wb') as f:
                     for line in conn.iterdump():
                         f.write(f'{line}\n'.encode('utf-8'))
-            logger.info(f"Створено резервну копію бази даних: {backup_file}")
+            logger.info(f"Database backup created: {backup_file}")
         except Exception as e:
-            logger.error(f"Помилка створення резервної копії: {e}")
+            logger.error(f"Backup creation error: {e}")
 
     def create_tables(self):
-        """Ініціалізація бази даних"""
+        """Initialize database"""
         try:
             self.execute_query('''CREATE TABLE IF NOT EXISTS user_settings
                                 (user_id INTEGER PRIMARY KEY,
                                  settlement TEXT,
                                  notifications TEXT,
                                  last_notification TIMESTAMP)''')
-            logger.info("База даних успішно ініціалізована")
+            logger.info("Database successfully initialized")
         except sqlite3.Error as e:
-            logger.error(f"Помилка ініціалізації бази даних: {e}")
+            logger.error(f"Database initialization error: {e}")
             raise
 
     def validate_settlement(self, settlement: str) -> bool:
-        """Перевірка валідності назви населеного пункту"""
+        """Validate settlement name"""
         return settlement in SETTLEMENTS
 
     def save_user_settlement(self, user_id: int, settlement: str):
-        """Зберегти вибраний населений пункт користувача"""
+        """Save user's selected settlement"""
         if not isinstance(user_id, int):
-            raise ValueError("user_id повинен бути цілим числом")
+            raise ValueError("user_id must be an integer")
         if not self.validate_settlement(settlement):
-            raise ValueError("Невірна назва населеного пункту")
+            raise ValueError("Invalid settlement name")
             
         self.execute_query(
             'INSERT OR REPLACE INTO user_settings (user_id, settlement) VALUES (?, ?)',
@@ -101,9 +101,9 @@ class Database:
         )
 
     def get_user_settlement(self, user_id: int) -> Optional[str]:
-        """Отримати вибраний населений пункт користувача"""
+        """Get user's selected settlement"""
         if not isinstance(user_id, int):
-            raise ValueError("user_id повинен бути цілим числом")
+            raise ValueError("user_id must be an integer")
             
         result = self.execute_query(
             'SELECT settlement FROM user_settings WHERE user_id = ?',
@@ -112,7 +112,7 @@ class Database:
         return result[0] if result else None
 
     def validate_notification_times(self, times: List[str]) -> bool:
-        """Перевірка валідності часу сповіщень"""
+        """Validate notification times"""
         try:
             for time in times:
                 hours, minutes = map(int, time.split(':'))
@@ -123,11 +123,11 @@ class Database:
             return False
 
     def save_user_notifications(self, user_id: int, notification_times: List[str]):
-        """Зберегти налаштування сповіщень користувача"""
+        """Save user's notification settings"""
         if not isinstance(user_id, int):
-            raise ValueError("user_id повинен бути цілим числом")
+            raise ValueError("user_id must be an integer")
         if not self.validate_notification_times(notification_times):
-            raise ValueError("Невірний формат часу сповіщень")
+            raise ValueError("Invalid notification time format")
             
         self.execute_query(
             'INSERT OR REPLACE INTO user_settings (user_id, notifications) VALUES (?, ?)',
@@ -135,9 +135,9 @@ class Database:
         )
 
     def get_user_notifications(self, user_id: int) -> List[str]:
-        """Отримати налаштування сповіщень користувача"""
+        """Get user's notification settings"""
         if not isinstance(user_id, int):
-            raise ValueError("user_id повинен бути цілим числом")
+            raise ValueError("user_id must be an integer")
             
         result = self.execute_query(
             'SELECT notifications FROM user_settings WHERE user_id = ?',
@@ -146,9 +146,9 @@ class Database:
         return json.loads(result[0]) if result and result[0] else []
 
     def update_last_notification(self, user_id: int):
-        """Оновити час останнього сповіщення"""
+        """Update last notification time"""
         if not isinstance(user_id, int):
-            raise ValueError("user_id повинен бути цілим числом")
+            raise ValueError("user_id must be an integer")
             
         self.execute_query(
             'UPDATE user_settings SET last_notification = ? WHERE user_id = ?',
@@ -156,9 +156,9 @@ class Database:
         )
 
     def get_users_for_notification(self, current_time: str) -> List[Dict[str, Union[int, str]]]:
-        """Отримати список користувачів для сповіщення"""
+        """Get list of users for notification"""
         if not self.validate_notification_times([current_time]):
-            raise ValueError("Невірний формат часу")
+            raise ValueError("Invalid time format")
             
         rows = self.execute_query(
             'SELECT user_id, settlement, notifications FROM user_settings WHERE notifications IS NOT NULL',
@@ -174,9 +174,9 @@ class Database:
         return users
 
     def export_user_settings(self, user_id: int) -> Dict:
-        """Експорт налаштувань користувача"""
+        """Export user settings"""
         if not isinstance(user_id, int):
-            raise ValueError("user_id повинен бути цілим числом")
+            raise ValueError("user_id must be an integer")
             
         result = self.execute_query(
             'SELECT * FROM user_settings WHERE user_id = ?',
@@ -192,13 +192,13 @@ class Database:
         return None
 
     def import_user_settings(self, settings: Dict):
-        """Імпорт налаштувань користувача"""
+        """Import user settings"""
         if not isinstance(settings.get("user_id"), int):
-            raise ValueError("user_id повинен бути цілим числом")
+            raise ValueError("user_id must be an integer")
         if not self.validate_settlement(settings.get("settlement", "")):
-            raise ValueError("Невірна назва населеного пункту")
+            raise ValueError("Invalid settlement name")
         if not self.validate_notification_times(settings.get("notifications", [])):
-            raise ValueError("Невірний формат часу сповіщень")
+            raise ValueError("Invalid notification time format")
             
         self.execute_query(
             '''INSERT OR REPLACE INTO user_settings 

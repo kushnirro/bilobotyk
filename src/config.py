@@ -1,6 +1,6 @@
 from typing import Dict, Union, List
 
-# Словник населених пунктів Білобожницької громади та їх координати
+# Dictionary of settlements in Bilobozhnytska community and their coordinates
 SETTLEMENTS: Dict[str, Dict[str, float]] = {
     "Білобожниця": {"lat": 49.0261, "lon": 25.7357},
     "Білий Потік": {"lat": 49.0767, "lon": 25.6775},
@@ -14,29 +14,29 @@ SETTLEMENTS: Dict[str, Dict[str, float]] = {
     "Косів": {"lat": 48.9325, "lon": 25.7663},
 }
 
-# Налаштування кешування
-WEATHER_CACHE_TIMEOUT: int = 1800  # 30 хвилин у секундах
-FORECAST_CACHE_TIMEOUT: int = 3600  # 1 година у секундах
-NEWS_CACHE_TIMEOUT = 1800  # 30 хвилин у секундах
+# Cache settings
+WEATHER_CACHE_TIMEOUT: int = 1800  # 30 minutes in seconds
+FORECAST_CACHE_TIMEOUT: int = 3600  # 1 hour in seconds
+NEWS_CACHE_TIMEOUT = 1800  # 30 minutes in seconds
 
-# Налаштування API
-WEATHER_API_TIMEOUT: int = 10  # секунд
+# API settings
+WEATHER_API_TIMEOUT: int = 10  # seconds
 
-# Налаштування сповіщень
-DEFAULT_NOTIFICATION_TIMES: List[str] = ["08:00", "14:00", "20:00"]  # Стандартні часи сповіщень
-MAX_NOTIFICATIONS_PER_USER: int = 5  # Максимальна кількість сповіщень для одного користувача
+# Notification settings
+DEFAULT_NOTIFICATION_TIMES: List[str] = ["08:00", "14:00", "20:00"]  # Default notification times
+MAX_NOTIFICATIONS_PER_USER: int = 5  # Maximum number of notifications per user
 
-# Джерела новин
+# News sources
 NEWS_SOURCES = {
     "suspilne": {
         "name": "Суспільне Тернопіль",
         "url": "https://suspilne.media/ternopil/",
         "icon": "📰"
     }
-    # Тут можна додати інші джерела новин
+    # Additional news sources can be added here
 }
 
-# Емодзі для різних типів погоди
+# Emojis for different weather types
 WEATHER_EMOJIS: Dict[str, str] = {
     "Clear": "☀️",
     "Clouds": "☁️",
